@@ -75,7 +75,10 @@ public class ZKPropertyListener<T> implements PropertyListener<List<T>> {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }*/
+        } catch (Exception e) {
+        }
 
+        try {
             // send to zk
             String data = JSON.toJSONString(value);
             zkClient.setData().forPath(path, data.getBytes());
