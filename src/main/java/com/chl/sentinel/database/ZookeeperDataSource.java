@@ -22,8 +22,8 @@ import org.apache.curator.framework.recipes.cache.NodeCacheListener;
  **/
 public class ZookeeperDataSource<T> extends AbstractDataSource<String, T> {
 
-    private static final ExecutorService pool = new ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<Runnable>(1), new NamedThreadFactory("sentinel-zookeeper-ds-update"),
+    public static final ExecutorService pool = new ThreadPoolExecutor(8, 16, 0, TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<Runnable>(100), new NamedThreadFactory("sentinel-zookeeper-ds-update"),
             new ThreadPoolExecutor.DiscardOldestPolicy());
 
     private final String path;
@@ -64,7 +64,6 @@ public class ZookeeperDataSource<T> extends AbstractDataSource<String, T> {
 
     private void initZookeeperListener(final String serverAddr, final List<AuthInfo> authInfos) {
         try {
-
             this.listener = new NodeCacheListener() {
 
                 @Override
@@ -84,7 +83,7 @@ public class ZookeeperDataSource<T> extends AbstractDataSource<String, T> {
             };
 
             this.nodeCache = new NodeCache(this.zkClient, this.path);
-            this.nodeCache.getListenable().addListener(this.listener, pool);
+            this.nodeCache.getListenable().addListener(this.listener, ZookeeperDataSource.pool);
             this.nodeCache.start(true);
         } catch (Exception e) {
             RecordLog.warn("[ZookeeperDataSource] Error occurred when initializing Zookeeper data source", e);
@@ -115,6 +114,6 @@ public class ZookeeperDataSource<T> extends AbstractDataSource<String, T> {
         if (this.zkClient != null) {
             this.zkClient.close();
         }
-        pool.shutdown();
+        ZookeeperDataSource.pool.shutdown();
     }
 }
